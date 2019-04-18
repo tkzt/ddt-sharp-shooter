@@ -11,7 +11,7 @@ tags:
 随着年纪的增长，我们对待某些事物的方式会发生变化。比如，今天的晚霞是那种贼好看的晚霞，我情不自禁地把它拍了下来。当然，到这里变化还没有发生，变化是随后我开始编辑这张照片：裁剪、调整局部饱和度、增加些许颗粒……如下：
 
 <div style="text-align:center;font-size:12px;"><img src="/images/晚霞一瞬D.jpg">
-<i>2019/04/18 in Wuxi</i>
+<i>&copy;Qingqiu 2019-04-18 in Wuxi</i>
 </div>
 
 我以前是绝不会这么做的。像我们做完绝大多数事情一样，点击了保存以后，一切索然无味。大概这就是人生吧。
@@ -63,6 +63,6 @@ tags:
 
 <div align=center><iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=700 height=86 src="//music.163.com/outchain/player?type=2&id=399552413&auto=1&height=66"></iframe></div>
 
-以后有缘的话，再整个半透明的 GUI，再整个抛物线绘制、直线绘制……收。
+有缘的话，以后想再整个半透明的 GUI，再整个抛物线绘制、直线绘制……收。
 
 索然无味。
