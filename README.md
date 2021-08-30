@@ -1,16 +1,10 @@
----
-title: 恶灵王v0.0.1诞生记
-date: 2019/04/09 19:36
-tags: 
-    - 程序员物语
-    - AI
----
+# 恶灵王v0.0.1诞生记
 
 ## 晚霞
 
 随着年纪的增长，我们对待某些事物的方式会发生变化。比如，今天的晚霞是那种贼好看的晚霞，我情不自禁地把它拍了下来。当然，到这里变化还没有发生，变化是随后我开始编辑这张照片：裁剪、调整局部饱和度、增加些许颗粒……如下：
 
-<div style="text-align:center;font-size:12px;"><img src="/images/晚霞一瞬D.jpg">
+<div style="text-align:center;font-size:12px;"><img src="https://taoqingqiu.github.io/images/%E6%99%9A%E9%9C%9E%E4%B8%80%E7%9E%ACD.jpg">
 <i>&copy;Qingqiu 2019-04-18 in Wuxi</i>
 </div>
 
