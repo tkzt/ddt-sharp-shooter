@@ -3,7 +3,7 @@
 
 这是一个基于 [Pynputs](https://github.com/moses-palmer/pynput) 的 DDT 工具。基本原理在于，输入风力、角度、距离，根据力度表得出发射力度，而后发射。
 
-其中，力度通过按压时常来体现，具体见[这里](https://github.com/boring-plans/ddt-sharp-shooter/tree/master)。
+其中，力度通过按压时长来体现，具体见[这里](https://github.com/boring-plans/ddt-sharp-shooter/tree/master)。
 
 ## Getting Started
 
