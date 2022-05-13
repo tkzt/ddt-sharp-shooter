@@ -118,6 +118,7 @@ def fire():
 def run():
     km_run(_terminate_queue)
     time.sleep(1)
+    print('DSS is ready!')
     _terminate_queue.get()
 
 

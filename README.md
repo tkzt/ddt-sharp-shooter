@@ -1,5 +1,6 @@
 # DDT Sharp Shooter
 
+![](logo.ico)
 
 这是一个基于 [Pynputs](https://github.com/moses-palmer/pynput) 的 DDT 工具。基本原理在于，输入风力、角度、距离，根据力度表得出发射力度，而后发射。
 
