@@ -7,27 +7,31 @@ Created by Allen Tao at 2022/5/9 15:22
 """
 import queue
 import time
-from pynput import keyboard
+from pynput import keyboard, mouse
 
-_terminate_queue: queue.Queue
+_queue: queue.Queue
+
+
+def on_click(x, y, btn_type, down):
+    if btn_type == mouse.Button.left and down:
+        _queue.put((x,y))
 
 
 def on_press(event):
-    from main import handle_inputs
     try:
         if event.char == 'q':
-            _terminate_queue.put(None)
+            _queue.put(None)
         else:
-            handle_inputs(event.char)
+            _queue.put(event.char)
     except AttributeError:
         if event == keyboard.Key.esc:
-            handle_inputs('esc')
+            _queue.put('esc')
         elif event == keyboard.Key.enter:
-            handle_inputs('enter')
+            _queue.put('enter')
         elif event == keyboard.Key.space:
-            handle_inputs(' ')
+            _queue.put(' ')
         elif event == keyboard.Key.backspace:
-            handle_inputs('delete')
+            _queue.put('delete')
 
 
 def space_press_and_release(duration):
@@ -48,12 +52,14 @@ def key_press_and_release(key):
     k.release(key)
 
 
-def run(terminate_queue):
-    global _terminate_queue
-    _terminate_queue = terminate_queue
+def run(km_queue):
+    global _queue
+    _queue = km_queue
 
     keyboard_listener = keyboard.Listener(on_press=on_press)
     keyboard_listener.start()
+    mouse_listener = mouse.Listener(on_click=on_click)
+    mouse_listener.start()
 
 
 if __name__ == '__main__':
