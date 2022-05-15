@@ -46,7 +46,9 @@ def gui_check_alive():
 def resolve_inputs():
     """Resolve inputs to parameters"""
     global _parameters
-    _gui_queue.put(f'Inputs typed in: {_typing}, resolving..')
+    _gui_queue.put(f'Inputs typed in: {_typing}')
+    _gui_queue.put(f'Points marked: {_points}')
+    _gui_queue.put('Resolving..')
     wind_deg_list = _typing.split(' ')
     params = {}
 
