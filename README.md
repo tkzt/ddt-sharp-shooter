@@ -8,15 +8,15 @@
 
 ## Build
 
-受 OS 所限，[Releases](https://github.com/boring-plans/ddt-sharp-shooter/releases) 仅提供了 MacOS 上的可执行文件。
+~~受 OS 所限，[Releases](https://github.com/boring-plans/ddt-sharp-shooter/releases) 仅提供了 MacOS 上的可执行文件。~~
 
-可通过：
+~~可通过：~~
 
-```shell
-python setup.py py2app
-```
+~~python setup.py py2app~~
 
-自行构建 App。
+~~自行构建 App。~~
+
+加入了 GUI 之后，无法正常打包。直接 PYC 运行吧，有缘再研究。
 
 ## Getting Started
 
