@@ -5,3 +5,4 @@ venv
 *.spec
 .idea
 .DS_Store
+*.list

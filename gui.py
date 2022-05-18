@@ -9,7 +9,6 @@ import threading
 import time
 import tkinter
 
-_TEXT_PLACEHOLDER = '🚀DSS is ready!'
 _tk: tkinter.Tk
 _text: tkinter.Text
 _terminate = False
@@ -39,7 +38,7 @@ def append_text(text):
 
 
 def run(gui_queue):
-    global _tk, _text, _queue
+    global _tk, _text, _queue, _screen_size
     _queue = gui_queue
 
     _tk = tkinter.Tk()
@@ -55,10 +54,10 @@ def run(gui_queue):
         bg='lightblue',
         fg='black',
         padx=12,
-        pady=8
+        pady=8,
     )
     _text.pack()
-    _text.insert('end', _TEXT_PLACEHOLDER)
+    _text.insert('end', 'GUI 初始化完毕!🎆')
     _text.config(state='disabled')
 
     threading.Thread(target=update_text).start()

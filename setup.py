@@ -10,12 +10,12 @@ APP = ['main.py']
 DATA_FILES = []
 OPTIONS = {
     'iconfile': 'assets/logo.ico',
-    'packages': ['pynput'],
+    'packages': ['pynput', 'pillow', 'ddddocr', 'screeninfo'],
     'plist': {
         'CFBundleName': "DSS",
         'CFBundleGetInfoString': "DDT 小工具",
         'CFBundleIdentifier': "Boring Plans",
-        'CFBundleShortVersionString': "v1.0.2",
+        'CFBundleShortVersionString': "v2.0.0",
         'NSHumanReadableCopyright': "©️ Allen Tao",
         'Localization native development region': 'China'
     }

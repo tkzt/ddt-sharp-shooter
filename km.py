@@ -14,7 +14,7 @@ _queue: queue.Queue
 
 def on_click(x, y, btn_type, down):
     if btn_type == mouse.Button.left and down:
-        _queue.put((x,y))
+        _queue.put((int(x), int(y)))
 
 
 def on_press(event):
@@ -58,6 +58,7 @@ def run(km_queue):
 
     keyboard_listener = keyboard.Listener(on_press=on_press)
     keyboard_listener.start()
+    time.sleep(.5)
     mouse_listener = mouse.Listener(on_click=on_click)
     mouse_listener.start()
 
