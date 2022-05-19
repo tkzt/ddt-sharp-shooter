@@ -16,8 +16,8 @@ OPTIONS = {
         'CFBundleDisplayName': 'DDT Sharp Shooter',
         'CFBundleGetInfoString': "一个 DDT 小工具",
         'CFBundleIdentifier': "com.boring-plans.dss",
-        'CFBundleVersion': "SMZG 2.0.1",
-        'CFBundleShortVersionString': "2.0.1",
+        'CFBundleVersion': "SMZG 2.0.2",
+        'CFBundleShortVersionString': "2.0.2",
         'NSHumanReadableCopyright': u"© Allen Tao"
     }
 }
