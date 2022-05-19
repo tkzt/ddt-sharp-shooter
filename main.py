@@ -57,10 +57,8 @@ def gui_check_alive():
 
 
 def grab_box(box: tuple) -> bytes:
-    import tkinter
-    screen = tkinter.Tk()
     bytes_io = io.BytesIO()
-    image = ImageGrab.grab().resize((screen.winfo_screenwidth(), screen.winfo_screenheight())).crop(box)
+    image = ImageGrab.grab().resize((_screen_size[0], _screen_size[1])).crop(box)
     image.save(bytes_io, format='png')
     return bytes_io.getvalue()
 
@@ -94,8 +92,8 @@ def analyse_wind():
         try:
             wind_center = _wind_degree_points[1]
             wind_box = (wind_center[0] - 20, wind_center[1] - 10, wind_center[0] + 20, wind_center[1] + 10)
-            print(wind_box)
             digits = recognize_digits(grab_box(wind_box))
+            print(digits)
             digits_len = len(digits)
             if digits_len >= 3:
                 return float(f'{digits[0]}.{digits[2]}')
@@ -154,13 +152,12 @@ def handle_inputs(inputs):
             # press enter to submit command and fire
             if inputs == 'enter':
                 direct_force = analyse_direct_force()
-                reset_inputs()  # reset immediately, in case that degree adjusting fire keyboard events
                 if direct_force > 0:
                     fire(force=direct_force)
                 else:
                     wind, degree, distance = analyse_wind(), analyse_degree(), analyse_distance()
-                    reset_inputs()
                     fire(wind, degree, distance)
+                reset_inputs()
             # edit command
             elif inputs == 'delete':
                 _direct_force_typing = _direct_force_typing[:-1]
@@ -174,6 +171,7 @@ def handle_inputs(inputs):
     elif inputs_type == tuple:
         if _command_flag == 2:
             _distance_points.append(inputs)
+            _gui_queue.put(f'{len(_distance_points)} 个点已标记')
         if _command_flag == 3:
             if len(_wind_degree_points) == 2:
                 _wind_degree_points.clear()
@@ -234,6 +232,7 @@ def run():
         _gui_process.start()
 
         km_run(_km_queue)
+        time.sleep(1)
 
         threading.Thread(target=km_listen_queue).start()
         threading.Thread(target=gui_check_alive).start()
