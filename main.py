@@ -6,6 +6,7 @@ Created by Allen Tao at 2022/5/9 15:22
 """
 import pickle
 import io
+import re
 import multiprocessing
 import threading
 import time
@@ -59,7 +60,7 @@ def grab_box(box: tuple) -> bytes:
     import tkinter
     screen = tkinter.Tk()
     bytes_io = io.BytesIO()
-    image = ImageGrab.grab().resize((screen.winfo_screenwidth(), screen.winfo_screenheight() )).crop(box)
+    image = ImageGrab.grab().resize((screen.winfo_screenwidth(), screen.winfo_screenheight())).crop(box)
     image.save(bytes_io, format='png')
     return bytes_io.getvalue()
 
@@ -68,21 +69,23 @@ def analyse_distance():
     global _distance_unit
     distance_points_len = len(_distance_points)
     if distance_points_len >= 4:
-        _distance_unit = 10 / abs(_distance_points[2][0]-_distance_points[3][0])
+        _distance_unit = 10 / abs(_distance_points[2][0] - _distance_points[3][0])
 
     if _distance_unit and distance_points_len >= 2:
-        return _distance_unit * abs(_distance_points[0][0]-_distance_points[1][0])
+        return _distance_unit * abs(_distance_points[0][0] - _distance_points[1][0])
     return 0
 
 
 def analyse_direct_force():
-    if _direct_force_typing:
+    if _direct_force_typing and re.match(r'^f\d[\d.]*', _direct_force_typing):
         try:
-            direct_force = float(_direct_force_typing)
+            direct_force = float(_direct_force_typing[1:])
             _gui_queue.put(f'Direct force:\n  {direct_force}')
             return direct_force
         except ValueError:
             _gui_queue.put(f'Failed to analyse direct force.')
+    else:
+        _gui_queue.put(f'输入无效: {_direct_force_typing}')
     return 0
 
 
@@ -90,7 +93,7 @@ def analyse_wind():
     if len(_wind_degree_points) == 2:
         try:
             wind_center = _wind_degree_points[1]
-            wind_box = (wind_center[0]-20, wind_center[1]-10, wind_center[0]+20, wind_center[1]+10)
+            wind_box = (wind_center[0] - 20, wind_center[1] - 10, wind_center[0] + 20, wind_center[1] + 10)
             print(wind_box)
             digits = recognize_digits(grab_box(wind_box))
             digits_len = len(digits)
@@ -109,7 +112,7 @@ def analyse_degree():
     if len(_wind_degree_points) == 2:
         try:
             degree_center = _wind_degree_points[0]
-            degree_box = (degree_center[0]-15, degree_center[1]-15, degree_center[0]+15, degree_center[1]+15)
+            degree_box = (degree_center[0] - 15, degree_center[1] - 15, degree_center[0] + 15, degree_center[1] + 15)
             digits = recognize_digits(grab_box(degree_box))
             digits_len = len(digits)
             if digits_len >= 1:
@@ -131,7 +134,7 @@ def handle_inputs(inputs):
     """To handle inputs"""
     global _command_flag, _direct_force_typing, _wind_direction
     inputs_type = type(inputs)
-    if inputs_type==str:
+    if inputs_type == str:
         # press ESC to cancel
         if inputs == 'esc':
             reset_inputs()
@@ -151,11 +154,12 @@ def handle_inputs(inputs):
             # press enter to submit command and fire
             if inputs == 'enter':
                 direct_force = analyse_direct_force()
+                reset_inputs()  # reset immediately, in case that degree adjusting fire keyboard events
                 if direct_force > 0:
                     fire(force=direct_force)
                 else:
                     wind, degree, distance = analyse_wind(), analyse_degree(), analyse_distance()
-                    reset_inputs()  # reset immediately, in case that degree adjusting fire keyboard events
+                    reset_inputs()
                     fire(wind, degree, distance)
             # edit command
             elif inputs == 'delete':
@@ -180,7 +184,7 @@ def handle_inputs(inputs):
                 _gui_queue.put('风力位置已标记🌪️')
 
 
-def calc_duration(force): return _PRESS_DURATION_PER_FORCE*force
+def calc_duration(force): return _PRESS_DURATION_PER_FORCE * force
 
 
 def fire(wind=None, degree=None, distance=None, force=None):
@@ -196,14 +200,14 @@ def fire(wind=None, degree=None, distance=None, force=None):
         space_press_and_release(calc_duration(force))
     elif wind is not None and degree and distance:
         _gui_queue.put(
-            f'🌪当前风力: {"顺" if _wind_direction>0 else ("逆" if _wind_direction<0 else "")} {abs(wind)}\n'
+            f'🌪当前风力: {"顺" if _wind_direction > 0 else ("逆" if _wind_direction < 0 else "")} {abs(wind)}\n'
             f'📐当前角度: {degree}°'
         )
         force = get_force(degree, distance)
         time.sleep(1.5)
         if degree == 65:
             times = round(wind * 2)
-            _gui_queue.put(f'调整角度: 65° -> {65+times}°')
+            _gui_queue.put(f'调整角度: 65° -> {65 + times}°')
             for _ in range(times):
                 key_press_and_release('w' if times > 0 else 's')
                 time.sleep(0.185)

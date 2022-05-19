@@ -10,9 +10,15 @@ APP = ['main.py']
 DATA_FILES = []
 OPTIONS = {
     'iconfile': 'assets/logo.ico',
-    'packages': ['pynput', 'ddddocr', 'screeninfo'],
+    'packages': ['pynput', 'ddddocr', 'screeninfo', 'PIL'],
     'plist': {
-        'CFBundleName': "DSS",
+        'CFBundleName': 'DSS',
+        'CFBundleDisplayName': 'DDT Sharp Shooter',
+        'CFBundleGetInfoString': "一个 DDT 小工具",
+        'CFBundleIdentifier': "com.boring-plans.dss",
+        'CFBundleVersion': "SMZG 2.0.1",
+        'CFBundleShortVersionString': "2.0.1",
+        'NSHumanReadableCopyright': u"© Allen Tao"
     }
 }
 
