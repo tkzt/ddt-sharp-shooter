@@ -48,8 +48,8 @@ def key_press_and_release(key):
     and then release immediately"""
     k = keyboard.Controller()
     k.press(key)
-    time.sleep(0.185)
     k.release(key)
+    time.sleep(0.37)
 
 
 def run(km_queue):
