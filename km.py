@@ -19,10 +19,7 @@ def on_click(x, y, btn_type, down):
 
 def on_press(event):
     try:
-        if event.char == 'q':
-            _queue.put(None)
-        else:
-            _queue.put(event.char)
+        _queue.put(event.char)
     except AttributeError:
         if event == keyboard.Key.esc:
             _queue.put('esc')

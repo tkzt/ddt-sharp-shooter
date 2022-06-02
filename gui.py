@@ -44,15 +44,13 @@ def run(gui_queue):
     _tk = tkinter.Tk()
     _tk.title('DSS')
     _tk.geometry('300x200')
-    _tk.wm_attributes('-topmost', 1, '-alpha', .618, '-transparent', 1)
+    _tk.wm_attributes('-topmost', 1, '-alpha', .618)
     _tk.bind('<Destroy>', on_destroy)
 
     _text = tkinter.Text(_tk)
     _text.config(
         highlightthickness=0,
         font=('', 12, 'bold'),
-        bg='lightblue',
-        fg='black',
         padx=12,
         pady=8,
     )

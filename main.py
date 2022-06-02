@@ -40,7 +40,6 @@ def km_listen_queue():
             if len(_wind_degree_points) > 0:
                 with open(_W_D_POINTS_DUMP_NAME, 'wb') as f:
                     pickle.dump(_wind_degree_points, f)
-            _gui_process.terminate()
             break
         else:  # handle inputs
             handle_inputs(inputs)
@@ -125,7 +124,7 @@ def reset_inputs():
     _command_flag = 0
     _direct_force_typing = ''
     _distance_points.clear()
-    _gui_queue.put("指令输入关闭🔒")
+    _gui_queue.put("指令输入关闭.")
 
 
 def handle_inputs(inputs):
@@ -145,9 +144,9 @@ def handle_inputs(inputs):
             _command_flag += 1
             _command_flag %= 4
             if _command_flag == 2:
-                _gui_queue.put("指令输入开启💡")
+                _gui_queue.put("指令输入开启..")
             elif _command_flag == 0:
-                _gui_queue.put("指令输入关闭🔒")
+                _gui_queue.put("指令输入关闭.")
         elif _command_flag == 2:
             # press enter to submit command and fire
             if inputs == 'enter':
@@ -177,9 +176,9 @@ def handle_inputs(inputs):
                 _wind_degree_points.clear()
             _wind_degree_points.append(inputs)
             if len(_wind_degree_points) == 1:
-                _gui_queue.put('角度位置已标记📐️')
+                _gui_queue.put('角度位置已标记')
             else:
-                _gui_queue.put('风力位置已标记🌪️')
+                _gui_queue.put('风力位置已标记')
 
 
 def calc_duration(force): return _PRESS_DURATION_PER_FORCE * force
@@ -193,13 +192,13 @@ def fire(wind=None, degree=None, distance=None, force=None):
     """
     if force:
         time.sleep(1.5)
-        _gui_queue.put(f'👊直接指定发射力度: {force}')
-        _gui_queue.put('🚀发射!')
+        _gui_queue.put(f'直接指定发射力度: {force}')
+        _gui_queue.put('发射!')
         space_press_and_release(calc_duration(force))
     elif wind is not None and degree and distance:
         _gui_queue.put(
-            f'🌪当前风力: {"顺" if _wind_direction > 0 else ("逆" if _wind_direction < 0 else "")} {abs(wind)}\n'
-            f'📐当前角度: {degree}°'
+            f'当前风力: {"顺" if _wind_direction > 0 else ("逆" if _wind_direction < 0 else "")} {abs(wind)}\n'
+            f'当前角度: {degree}°'
         )
         force = get_force(degree, distance)
         time.sleep(1.5)
@@ -211,14 +210,14 @@ def fire(wind=None, degree=None, distance=None, force=None):
                 time.sleep(0.185)
         else:
             force += -round(wind)
-        _gui_queue.put(f'👊发射力度: {force}')
-        _gui_queue.put('🎯发射!')
+        _gui_queue.put(f'发射力度: {force}')
+        _gui_queue.put('发射!')
         space_press_and_release(calc_duration(force))
     else:
         _gui_queue.put(f'- wind: {"None" if wind is None else wind}')
         _gui_queue.put(f'- degree: {degree}')
         _gui_queue.put(f'- distance: {distance}')
-        _gui_queue.put('💔参数缺失, 力度计算失败')
+        _gui_queue.put('参数缺失, 力度计算失败')
 
 
 def run():
@@ -243,17 +242,17 @@ def run():
                 _wind_degree_points = pickle.load(f)
                 if len(_wind_degree_points) == 2:
                     _gui_queue.put('角度、风力位置已加载:')
-                    _gui_queue.put(f'📐角度位置: {_wind_degree_points[0]}')
-                    _gui_queue.put(f'🌪️风力位置: {_wind_degree_points[1]}')
+                    _gui_queue.put(f'角度位置: {_wind_degree_points[0]}')
+                    _gui_queue.put(f'️风力位置: {_wind_degree_points[1]}')
                 else:
                     _wind_degree_points.clear()
-                    _gui_queue.put('角度、风力位置加载失败❌')
+                    _gui_queue.put('角度、风力位置加载失败')
         if len(_wind_degree_points) == 0:
             _gui_queue.put('按下三次 t 而后点击屏幕以设置角度、风力位置，而后按下 ESC 退出、完成设置')
 
-        _gui_queue.put('DSS is ready!🚀')
+        _gui_queue.put('DSS is ready!')
     else:
-        _gui_queue.put('获取屏幕信息失败❌')
+        _gui_queue.put('获取屏幕信息失败')
 
 
 if __name__ == '__main__':
