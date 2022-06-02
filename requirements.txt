@@ -1,6 +1,6 @@
 pynput==1.7.6
 py2app==0.28
 ddddocr==1.4.3
-pillow==9.1.0
+pillow==9.1.1
 screeninfo~=0.8
 setuptools~=62.0.0
