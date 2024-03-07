@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Keyboard and mouse input/output,
-and ScreenGrabbing
-
-Created by Allen Tao at 2022/5/9 15:22
-"""
 import queue
 import time
 from pynput import keyboard, mouse

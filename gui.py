@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-GUI
-
-Created by Allen Tao at 2022/5/13 21:08
-"""
 import multiprocessing
 import threading
 import time
@@ -38,7 +32,7 @@ def append_text(text):
 
 
 def run(gui_queue):
-    global _tk, _text, _queue, _screen_size
+    global _tk, _text, _queue
     _queue = gui_queue
 
     _tk = tkinter.Tk()

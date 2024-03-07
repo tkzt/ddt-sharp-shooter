@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-To coordinate GUI、Keyboard & Mouse IO
-
-Created by Allen Tao at 2022/5/9 15:22
-"""
 import pickle
 import io
 import re
@@ -14,10 +8,9 @@ import pathlib
 import screeninfo
 from PIL import ImageGrab
 from queue import Queue
-from force import get_force
+from force import calc_force
 from km import space_press_and_release, key_press_and_release, run as km_run
 from gui import run as gui_run
-from ocr import recognize_digits
 
 _W_D_POINTS_DUMP_NAME = 'wind_degree_points.list'
 _PRESS_DURATION_PER_FORCE = 4.1 / 100
@@ -200,7 +193,7 @@ def fire(wind=None, degree=None, distance=None, force=None):
             f'当前风力: {"顺" if _wind_direction > 0 else ("逆" if _wind_direction < 0 else "")} {abs(wind)}\n'
             f'当前角度: {degree}°'
         )
-        force = get_force(degree, distance)
+        force = calc_force(degree, distance)
         time.sleep(1.5)
         if degree == 65:
             times = round(wind * 2)

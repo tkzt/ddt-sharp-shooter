@@ -2,21 +2,19 @@
 
 <img src="assets/logo.ico" width="48"/>
 
-这是一个基于 [Pynput](https://github.com/moses-palmer/pynput) 的 DDT 工具。基本原理在于，得知风力、角度、距离的情况下，参考力度表得出发射力度，而后发射。
+这是一个 DDT 工具。基本原理在于，基于广为流传的力度表和简单运动模型拟合出关键参数，得出由风力、角度、距离计算发射力度的一般函数，最后利用 [Pynput](https://github.com/moses-palmer/pynput) 自动发射。
 
-其中，风力、角度通过 [ddddocr](https://github.com/sml2h3/ddddocr)（An awesome captcha recognition library）识别，屏距通过标记屏距测量框、敌我位置来推算，力度通过按压时长来体现，具体见[这里](https://github.com/boring-plans/ddt-sharp-shooter/tree/master)。
+其中，力度通过按压时长来体现，具体见[这里](https://github.com/boring-plans/ddt-sharp-shooter/tree/master)。
 
-## Build
+## 运行
 
-受 OS 所限，[Releases](https://github.com/boring-plans/ddt-sharp-shooter/releases) 仅提供了 MacOS 上的可执行文件。
+[Releases](https://github.com/boring-plans/ddt-sharp-shooter/releases) 中提供了一些可执行文件，当然你也可以在 `Python3.6+` 环境中通过：
 
-可通过：
-
-```python
-python setup.py py2app
+```shell
+python main.py
 ```
 
-自行构建 App。
+直接执行脚本。
 
 ## Getting Started
 

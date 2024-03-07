@@ -1,23 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-py2app setup
-
-Created by Allen Tao at 2022/5/13 16:46
-"""
 from setuptools import setup
 
 APP = ['main.py']
 DATA_FILES = []
 OPTIONS = {
     'iconfile': 'assets/logo.ico',
-    'packages': ['pynput', 'ddddocr', 'screeninfo', 'PIL'],
+    'packages': ['pynput', 'scipy'],
     'plist': {
         'CFBundleName': 'DSS',
         'CFBundleDisplayName': 'DDT Sharp Shooter',
         'CFBundleGetInfoString': "一个 DDT 小工具",
         'CFBundleIdentifier': "com.boring-plans.dss",
-        'CFBundleVersion': "SMZG 2.0.3",
-        'CFBundleShortVersionString': "2.0.3",
+        'CFBundleVersion': "NDSGL 3.0.0",
+        'CFBundleShortVersionString': "3.0.0",
         'NSHumanReadableCopyright': u"© Allen Tao"
     }
 }

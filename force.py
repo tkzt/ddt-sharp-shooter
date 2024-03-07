@@ -1,27 +1,33 @@
-# -*- coding: utf-8 -*-
-"""
-Force Map
-
-Created by Allen Tao at 2022/5/11 17:15
-"""
+# the amazing reference: https://www.52pojie.cn/thread-1132459-1-1.html
 import math
-
-_FORCE_MAP = {
-    20: [10, 19, 25, 30, 36, 40, 44, 48, 51, 54, 57, 60, 63, 66, 69, 72, 74, 76, 78, 80],
-    30: [14, 20, 24, 28, 32, 35, 38, 41, 44, 47, 50, 52, 55, 57, 60, 62, 65, 67, 69, 72],
-    50: [14, 20, 24, 28, 32, 35, 39, 42, 44, 48, 50, 53, 55, 58, 60, 63, 65, 68, 70, 72],
-    65: [13, 20, 26, 31, 37, 41, 44, 48, 53, 56, 58, 61, 64, 67, 70, 73, 76, 79, 82, 85],
-}
+import numpy as np
+from scipy.optimize import fsolve
 
 
-def get_force(deg, dis):
-    """传入角度、距离，获取力度
-    Note that: 1<=dis<=20
-    """
-    dis_left, integer = dis % 1, math.floor(dis)
-    base_force = _FORCE_MAP[deg][integer-1]
-    if integer<20:
-        extra_force = (_FORCE_MAP[deg][integer] - base_force)*dis_left
-    else:
-        extra_force = 0
-    return base_force + extra_force
+def calc_force(angel, wind, dx, dy):
+    r, w, g = [0.89927083, 5.8709153, -172.06527992]
+    angel = angel * math.pi / 180
+
+    def solve(f):
+        vx = math.cos(angel) * f
+        vy = math.sin(angel) * f
+
+        def calc_pos(v0, _f, _r, t):
+            tmp = _f - _r * v0
+            ert = np.power(math.e, -_r * t)
+            right = tmp * ert + _f * _r * t - tmp
+            return right / (_r * _r)
+
+        def calc_time(v0):
+            def _solve(t):
+                return calc_pos(v0, g, r, t) - dy
+
+            time = fsolve(_solve, np.array([100000]))
+            assert time[0] != 0
+            return time[0]
+
+        dt = calc_time(vy)
+        return calc_pos(vx, w * wind, r, dt) - dx
+
+    force = fsolve(solve, np.array([100]))
+    return force[0] if force[0] <= 100 else -1
