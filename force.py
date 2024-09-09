@@ -4,13 +4,13 @@ import numpy as np
 from scipy.optimize import fsolve
 
 
-def calc_force(angel, wind, dx, dy):
+def calc_force(deg: float, wind: float, dx: float, dy: float):
     r, w, g = [0.89927083, 5.8709153, -172.06527992]
-    angel = angel * math.pi / 180
+    deg = deg * math.pi / 180
 
     def solve(f):
-        vx = math.cos(angel) * f
-        vy = math.sin(angel) * f
+        vx = math.cos(deg) * f
+        vy = math.sin(deg) * f
 
         def calc_pos(v0, _f, _r, t):
             tmp = _f - _r * v0
@@ -30,4 +30,4 @@ def calc_force(angel, wind, dx, dy):
         return calc_pos(vx, w * wind, r, dt) - dx
 
     force = fsolve(solve, np.array([100]))
-    return force[0] if force[0] <= 100 else -1
+    return min(force[0], 100)

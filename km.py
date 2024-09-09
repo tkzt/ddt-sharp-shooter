@@ -1,13 +1,10 @@
 import queue
 import time
-from pynput import keyboard, mouse
+from pynput import keyboard
 
 _queue: queue.Queue
-
-
-def on_click(x, y, btn_type, down):
-    if btn_type == mouse.Button.left and down:
-        _queue.put((int(x), int(y)))
+_keyboard_listener: keyboard.Listener
+_stop_signal = False
 
 
 def on_press(event):
@@ -15,13 +12,11 @@ def on_press(event):
         _queue.put(event.char)
     except AttributeError:
         if event == keyboard.Key.esc:
-            _queue.put('esc')
+            _queue.put("esc")
         elif event == keyboard.Key.enter:
-            _queue.put('enter')
-        elif event == keyboard.Key.space:
-            _queue.put(' ')
+            _queue.put("enter")
         elif event == keyboard.Key.backspace:
-            _queue.put('delete')
+            _queue.put("delete")
 
 
 def space_press_and_release(duration):
@@ -33,27 +28,16 @@ def space_press_and_release(duration):
     k.release(keyboard.Key.space)
 
 
-def key_press_and_release(key):
-    """Press certain key several times down,
-    and then release immediately"""
-    k = keyboard.Controller()
-    k.press(key)
-    k.release(key)
-    time.sleep(0.37)
-
-
-def run(km_queue):
-    global _queue
-    _queue = km_queue
-
-    keyboard_listener = keyboard.Listener(on_press=on_press)
-    keyboard_listener.start()
-    time.sleep(.5)
-    mouse_listener = mouse.Listener(on_click=on_click)
-    mouse_listener.start()
-
-
-if __name__ == '__main__':
-    run(None)
-    while True:
+def wait_for_stop():
+    while not _stop_signal:
         time.sleep(1)
+    _keyboard_listener.stop()
+
+
+def setup(km_queue, stop_signal):
+    global _queue, _keyboard_listener, _stop_signal
+    _queue = km_queue
+    _stop_signal = stop_signal
+
+    _keyboard_listener = keyboard.Listener(on_press=on_press)
+    _keyboard_listener.start()
