@@ -18,9 +18,7 @@ _stop_signal = False
 def km_listen_queue():
     global _stop_signal
     while not _stop_signal:
-        if _km_queue.empty():
-            return
-        inputs = _km_queue.get(block=False)
+        inputs = _km_queue.get()
         handle_inputs(inputs)
 
 
@@ -112,6 +110,8 @@ def fire(force: int):
 def on_destroy(_):
     global _stop_signal
     _stop_signal = True
+    # put something to break the km_queue blocking
+    _km_queue.put("stop")
 
 
 def update_text():

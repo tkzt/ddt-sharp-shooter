@@ -2,7 +2,6 @@ build
 dist
 venv
 *.pyc
-*.spec
 .idea
 .DS_Store
 *.list

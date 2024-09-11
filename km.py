@@ -1,5 +1,6 @@
 import queue
 import time
+import pyautogui as auto_gui
 from pynput import keyboard
 
 _queue: queue.Queue
@@ -22,10 +23,9 @@ def on_press(event):
 def space_press_and_release(duration):
     """Press the key 'space' down for a while,
     and then release"""
-    k = keyboard.Controller()
-    k.press(keyboard.Key.space)
+    auto_gui.keyDown("space")
     time.sleep(duration)
-    k.release(keyboard.Key.space)
+    auto_gui.keyUp("space")
 
 
 def wait_for_stop():
