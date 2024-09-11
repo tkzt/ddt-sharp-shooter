@@ -1,7 +1,4 @@
-pynput==1.7.6
-scipy==1.12.0
-py2app==0.28.7
-pyinstaller==6.4.0
-numpy==2.1.1
 scipy==1.14.1
 pynput==1.7.7
+pyinstaller==6.10.0
+pyautogui==0.9.54

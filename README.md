@@ -16,6 +16,14 @@ python main.py
 
 直接执行脚本。
 
+### 打包
+
+PyInstaller 打包参考：
+
+```
+python -m PyInstaller main.py -F -w  -i "./assets/logo.icns" --name "dss"
+```
+
 ## Getting Started
 
 ### 计算模式
