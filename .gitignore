@@ -5,3 +5,5 @@ venv
 .idea
 .DS_Store
 *.list
+local*
+samples
