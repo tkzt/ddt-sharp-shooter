@@ -3,3 +3,4 @@ pynput==1.7.7
 pyinstaller==6.10.0
 pyautogui==0.9.54
 scikit-image==0.24.0
+ddddocr==1.5.6

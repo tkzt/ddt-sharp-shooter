@@ -1,11 +1,17 @@
 {
   "cSpell.words": [
+    "ddddocr",
     "fsolve",
     "fwxyd",
     "highlightthickness",
     "iconfile",
+    "ndarray",
     "NDSGL",
+    "otsu",
     "padx",
-    "pady"
+    "pady",
+    "pyautogui",
+    "recog",
+    "skimage"
   ]
 }

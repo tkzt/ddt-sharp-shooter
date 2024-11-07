@@ -13,10 +13,7 @@ from force import calc_force
 from km import space_press_and_release, setup as setup_km
 
 _PRESS_DURATION_PER_FORCE = 4.1 / 100
-_DEFAULT_POS_CONFIG = {
-    "wind": (0, 0),
-    "deg": (0, 0)
-}
+_DEFAULT_POS_CONFIG = {"wind": (0, 0), "deg": (0, 0)}
 _aiming = False
 _cmd_flag = 0
 _cmd_typing = ""
@@ -27,7 +24,7 @@ _text: tkinter.Text
 _stop_signal = False
 _pos_config = _DEFAULT_POS_CONFIG
 _map_info = {
-    "view_box": (0, 0), # left and right border of the view box
+    "view_box": (0, 0),  # left and right border of the view box
     "enemy": (0, 0),
     "player": (0, 0),
 }
@@ -83,11 +80,14 @@ def resolve_force():
             _gui_queue.put("输入无效，请检查输入格式。")
             return 0
     # Or else try cv recognizing
-    if not any(wind:=_pos_config["wind"]) or not any(deg:=_pos_config["deg"]):
+    if not any(wind := _pos_config["wind"]) or not any(deg := _pos_config["deg"]):
         _gui_queue.put("风力、角度位置未标记。")
         return 0
-    if not any(enemy:=_map_info["enemy"]) or not any(player:=_map_info["player"]):
+    if not any(enemy := _map_info["enemy"]) or not any(player := _map_info["player"]):
         _gui_queue.put("敌我位置未标记。")
+        return 0
+    if not any(view_box := _map_info["view_box"]):
+        _gui_queue.put("屏距框未标记。")
         return 0
     wind_img = cap_screen(wind, 60, 30)
     wind_num = recog_digit(wind_img, _ocr)
@@ -95,18 +95,22 @@ def resolve_force():
         _gui_queue.put("风力识别失败:(")
         return 0
     left_dark = left_side_more_dark(wind_img)
-    wind_direction = -1 if (
-        left_dark and player[0] < enemy[0]
-        or not left_dark and player[0] > enemy[0]
-    ) else 1
+    wind_direction = (
+        -1
+        if (
+            left_dark and player[0] < enemy[0] or not left_dark and player[0] > enemy[0]
+        )
+        else 1
+    )
     deg_img = cap_screen(deg)
     deg_value = recog_digit(deg_img)
     if not deg_value or deg_value == -1:
         _gui_queue.put("角度识别失败:(")
         return 0
-    delta_x = abs(player[0] - enemy[0])
-    delta_y = player[1] - enemy[1]
-    return calc_force(deg_value, wind_num/10 * wind_direction, delta_x, delta_y)
+    dist_coef = 10 / (view_box[1] - view_box[0])
+    delta_x = abs(player[0] - enemy[0]) * dist_coef
+    delta_y = (player[1] - enemy[1]) * dist_coef
+    return calc_force(deg_value, wind_num / 10 * wind_direction, delta_x, delta_y)
 
 
 def reset_inputs():
@@ -134,11 +138,11 @@ def handle_inputs(inputs: str):
     elif _cmd_flag == 2:
         if inputs == "d":
             pos = pyautogui.position()
-            _pos_config['deg'] = (pos.x, pos.y)
+            _pos_config["deg"] = (pos.x, pos.y)
             save_config()
         elif inputs == "w":
             pos = pyautogui.position()
-            _pos_config['wind'] = (pos.x, pos.y)
+            _pos_config["wind"] = (pos.x, pos.y)
             save_config()
         elif inputs == "l":
             pos = pyautogui.position()
@@ -220,7 +224,7 @@ def run():
     global _text, _ocr
 
     load_config()
-    
+
     _ocr = ddddocr.DdddOcr(show_ad=False)
 
     tk = tkinter.Tk()
