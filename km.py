@@ -1,11 +1,12 @@
 import queue
 import time
-import pyautogui as auto_gui
+import pyautogui
 from pynput import keyboard
 
+
+RELEASE_CHAR_PREFIX = "r_"
 _queue: queue.Queue
 _keyboard_listener: keyboard.Listener
-_stop_signal = False
 
 
 def on_press(event):
@@ -23,21 +24,23 @@ def on_press(event):
 def space_press_and_release(duration):
     """Press the key 'space' down for a while,
     and then release"""
-    auto_gui.keyDown("space")
+    pyautogui.keyDown("space")
     time.sleep(duration)
-    auto_gui.keyUp("space")
+    pyautogui.keyUp("space")
 
 
-def wait_for_stop():
-    while not _stop_signal:
-        time.sleep(1)
+def stop_listen() -> None:
     _keyboard_listener.stop()
 
 
-def setup(km_queue, stop_signal):
-    global _queue, _keyboard_listener, _stop_signal
+def setup(km_queue):
+    global _queue, _keyboard_listener
     _queue = km_queue
-    _stop_signal = stop_signal
 
     _keyboard_listener = keyboard.Listener(on_press=on_press)
     _keyboard_listener.start()
+
+
+def get_curr_mouse_pos():
+    """Get the current mouse position"""
+    return pyautogui.position()

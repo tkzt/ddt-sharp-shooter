@@ -5,3 +5,4 @@ venv
 .idea
 .DS_Store
 *.list
+game_config.json

@@ -1,18 +1,39 @@
 import re
+import sys
 import threading
 import time
 import tkinter
 from queue import Queue
-from force import calc_force
-from km import space_press_and_release, setup as setup_km
 
-_PRESS_DURATION_PER_FORCE = 4.1 / 100
+from pyautogui import Point
+from config import dump_config, load_config
+from logger import logger, setup_logger
+from force import calc_force
+from km import (
+    get_curr_mouse_pos,
+    space_press_and_release,
+    setup as setup_km,
+    stop_listen as km_stop_listen,
+)
+from ocr import recognize, recognize_ten_units, recognize_wind
+
+_GAME_CONFIG_PATH = "game_config.json"
+_PRESS_DURATION_PER_FORCE = 4.2 / 100
+_REF_GAME_REGION_WIDTH = 1500
+_WIND_REGION = (709, 22, 84, 54)  # (x, y, w, h)
+_DEG_REGION = (43, 835, 64, 36)  # (x, y, w, h)
+_MINIMAP_REGION = (1240, 45, 245, 140)  # (x, y, w, h)
 _cmd_flag = 0
 _cmd_typing = ""
 _km_queue = Queue()
-_gui_queue = Queue()
-_text: tkinter.Text
 _stop_signal = False
+_game_config = {
+    "region": (0, 0, 0, 0),  # (x, y, w, h)
+}
+_ten_units_pixels = 0
+_enemy_pos: tuple[int, int, int] | None = None  # dx, dy, enemy_left_side
+_tmp_pos: Point = None
+_tk: tkinter.Tk
 
 
 def km_listen_queue():
@@ -24,63 +45,171 @@ def km_listen_queue():
 
 def resolve_force():
     """Valid cmds will be like:
-    - directly give one force: `f30`
+    - directly give one force: `l30`
     - calculate force from wind, distance: `x12,y1,w-2,d65`
         means: dx=12, dy=1, wind=-2, degree=65
     """
-    if _cmd_typing:
-        var_val = {"w": 0, "x": 0, "y": 0, "d": 0, "f": 0}
-        try:
-            for var, val in re.findall(r"([fwxyd])(-?\d+.?\d+)", _cmd_typing):
-                var_val[var] = float(val)
-            if var_val["f"]:
-                _gui_queue.put(f"Direct force:\n {var_val['f']}")
-                return var_val["f"]
-            _gui_queue.put(
-                f"Wind: {var_val['w']}, Delta X: {var_val['x']=}, "
-                f"Delta Y: {var_val['y']=}, Degree: {var_val['d']}"
+    var_val = {"w": 0, "x": 0, "y": 0, "d": 0, "l": 0}
+    try:
+        for var, val in re.findall(r"([lwxyd])(-?\d+.?\d+)", _cmd_typing):
+            var_val[var] = float(val)
+        if var_val["l"]:
+            logger.info(f"Direct force:\n {var_val['l']}")
+            return var_val["l"]
+        logger.info(
+            f"Wind: {var_val['w']}, Delta X: {var_val['x']=}, "
+            f"Delta Y: {var_val['y']=}, Degree: {var_val['d']}"
+        )
+        return calc_force(var_val["d"], var_val["w"], var_val["x"], var_val["y"])
+    except ValueError:
+        logger.info("输入无效: 请检查输入格式.")
+
+
+def recognize_and_fire():
+    global _ten_units_pixels
+    dx, dy, enemy_left_side = _enemy_pos
+    x, y, w, _ = _game_config["region"]
+    pos_adjust_ratio = w / _REF_GAME_REGION_WIDTH
+
+    if not _ten_units_pixels:
+        logger.info("十屏距离未标记，尝试自动识别...")
+        rect_res = recognize_ten_units(
+            (
+                int((x + _MINIMAP_REGION[0]) * pos_adjust_ratio),
+                int((y + _MINIMAP_REGION[1]) * pos_adjust_ratio),
+                int(_MINIMAP_REGION[2] * pos_adjust_ratio),
+                int(_MINIMAP_REGION[3] * pos_adjust_ratio),
             )
-            return calc_force(var_val["d"], var_val["w"], var_val["x"], var_val["y"])
-        except ValueError:
-            _gui_queue.put("输入无效: 请检查输入格式.")
-    else:
-        _gui_queue.put(f"输入无效: {_cmd_typing}")
-    return 0
+        )
+        _ten_units_pixels = rect_res
+
+    dx = dx / _ten_units_pixels * 10
+    dy = dy / _ten_units_pixels * 10
+    logger.info(f"十屏距离: {_ten_units_pixels}, dx: {dx}, dy: {dy}")
+
+    wind, left_more_dark = recognize_wind(
+        (
+            int(x + _WIND_REGION[0] * pos_adjust_ratio),
+            int(y + _WIND_REGION[1] * pos_adjust_ratio),
+            int(_WIND_REGION[2] * pos_adjust_ratio),
+            int(_WIND_REGION[3] * pos_adjust_ratio),
+        )
+    )
+    wind = wind * (
+        -1
+        if left_more_dark
+        and not enemy_left_side
+        or not left_more_dark
+        and enemy_left_side
+        else 1
+    )
+    logger.info(f"风速: {wind}")
+    deg = recognize(
+        (
+            int(x + _DEG_REGION[0] * pos_adjust_ratio),
+            int(y + _DEG_REGION[1] * pos_adjust_ratio),
+            int(_DEG_REGION[2] * pos_adjust_ratio),
+            int(_DEG_REGION[3] * pos_adjust_ratio),
+        )
+    )
+    force = calc_force(int(deg), wind, dx, dy)
+    fire(force)
+    reset_inputs()
 
 
-def reset_inputs():
-    global _cmd_flag, _cmd_typing
-    _cmd_flag = 0
+def reset_inputs(new_game=False):
+    global _cmd_flag, _cmd_typing, _tmp_pos, _ten_units_pixels, _enemy_pos
+    if new_game:
+        _cmd_flag = 0
+        _ten_units_pixels = 0
+    _enemy_pos = None
     _cmd_typing = ""
-    _gui_queue.put("指令输入关闭.")
+    _tmp_pos = None
+    logger.info("指令输入关闭.")
 
 
 def handle_inputs(inputs: str):
     """To handle inputs"""
-    global _cmd_flag, _cmd_typing
+    global _cmd_flag, _cmd_typing, _tmp_pos, _ten_units_pixels, _enemy_pos
+
+    if not inputs:
+        return
 
     # press ESC to cancel
     if inputs == "esc":
-        reset_inputs()
+        reset_inputs(True)
+    elif inputs == "q":
+        # press 'q' to quit
+        logger.info("退出.")
+        _tk.quit()
+        sys.exit()
     # press the key 't' twice to enable command mode
     elif inputs == "t":
+        if _cmd_flag == 2:
+            if _enemy_pos or _cmd_typing:
+                if _enemy_pos:
+                    try:
+                        recognize_and_fire()
+                    except Exception:
+                        logger.info("关键参数识别失败，炸膛！")
+                        time.sleep(1)
+                elif _cmd_typing:
+                    direct_force = resolve_force()
+                    if direct_force and direct_force > 0:
+                        fire(force=direct_force)
+                    else:
+                        logger.info("输入无效: 请检查输入格式.")
+                        time.sleep(1)
+                reset_inputs()
+                return
         _cmd_flag += 1
         _cmd_flag %= 3
         if _cmd_flag == 2:
-            _gui_queue.put("指令输入开启..")
+            logger.info("指令输入开启..")
         elif _cmd_flag == 0:
-            _gui_queue.put("指令输入关闭.")
-    elif _cmd_flag == 2:
-        # press enter to submit command and fire
-        if inputs == "enter":
-            direct_force = resolve_force()
-            if direct_force > 0:
-                fire(force=direct_force)
-            else:
-                _gui_queue.put("力度计算失败.")
             reset_inputs()
-        elif inputs == "delete":
+    elif _cmd_flag == 2:
+        if inputs == "delete":
             _cmd_typing = _cmd_typing[:-1]
+        elif (
+            inputs == "r"
+        ):  # press and release 'r' to set game region (cooperated with mouse position)
+            if _tmp_pos:
+                pos = get_curr_mouse_pos()
+                _game_config["region"] = (
+                    _tmp_pos.x,
+                    _tmp_pos.y,
+                    pos.x - _tmp_pos.x,
+                    pos.y - _tmp_pos.y,
+                )
+                dump_config(_game_config, _GAME_CONFIG_PATH)
+                logger.info(f"游戏区域: {_game_config['region']}")
+                _tmp_pos = None
+                return
+            logger.info("设置游戏区域.")
+            _tmp_pos = get_curr_mouse_pos()
+        elif inputs == "e":
+            if _tmp_pos:
+                pos = get_curr_mouse_pos()
+                _ten_units_pixels = abs(pos.y - _tmp_pos.y)
+                logger.info(f"十屏距离: {_ten_units_pixels}")
+                _tmp_pos = None
+                return
+            logger.info("标记十屏距离.")
+            _tmp_pos = get_curr_mouse_pos()
+        elif inputs == "w":
+            if _tmp_pos:
+                pos = get_curr_mouse_pos()
+                _enemy_pos = (
+                    abs(pos.x - _tmp_pos.x),
+                    (_tmp_pos.y - pos.y),
+                    _tmp_pos.x > pos.x,
+                )
+                _tmp_pos = None
+                logger.info("标记完成.")
+                return
+            logger.info("标记敌我.")
+            _tmp_pos = get_curr_mouse_pos()
         else:
             _cmd_typing += inputs
 
@@ -102,8 +231,8 @@ def fire(force: int):
     and then release to fire
     """
     time.sleep(1.5)
-    _gui_queue.put(f"发射力度: {force}")
-    _gui_queue.put("发射!")
+    logger.info(f"发射力度: {force}")
+    logger.info("发射!")
     space_press_and_release(calc_duration(force))
 
 
@@ -112,50 +241,33 @@ def on_destroy(_):
     _stop_signal = True
     # put something to break the km_queue blocking
     _km_queue.put("stop")
-
-
-def update_text():
-    while not _stop_signal:
-        if not _gui_queue.empty():
-            text = _gui_queue.get(False)
-            append_text(text)
-        time.sleep(1)
-
-
-def append_text(text):
-    _text.config(state="normal")
-    _text.insert("end", f"\n{text}")
-    _text.see("end")
-    _text.config(state="disabled")
+    km_stop_listen()
 
 
 def run():
-    global _text
+    global _game_config, _tk
 
-    tk = tkinter.Tk()
-    tk.title("DSS")
-    tk.geometry("300x200")
-    tk.wm_attributes("-topmost", 1, "-alpha", 0.37)
-    tk.bind("<Destroy>", on_destroy)
+    _tk = tkinter.Tk()
+    _tk.title("DSS")
+    _tk.geometry("370x42")
+    _tk.wm_attributes("-topmost", 1, "-alpha", 0.618)
+    _tk.bind("<Destroy>", on_destroy)
+    _tk.configure(bg="#333333")
 
-    _text = tkinter.Text(tk)
-    _text.config(
-        highlightthickness=0,
-        font=("", 12, "bold"),
-        padx=12,
-        pady=8,
-    )
-    _text.pack()
-    _text.config(state="disabled")
+    text_widget = tkinter.Text(_tk, border=0, bg="#333333", fg="white")
+    text_widget.place(y=10, x=10, height=42)
+    text_widget.config(state="disabled")
 
-    setup_km(_km_queue, _stop_signal)
-    threading.Thread(target=update_text).start()
+    setup_logger(text_widget)
+    setup_km(_km_queue)
     threading.Thread(target=km_listen_queue).start()
-    time.sleep(1)
 
-    _gui_queue.put("DSS 初始化完毕!")
+    config = load_config(_GAME_CONFIG_PATH)
+    if config:
+        _game_config = config
 
-    tk.mainloop()
+    logger.info(f"DSS 初始化完毕!{'（配置已加载）' if config else ''}")
+    _tk.mainloop()
 
 
 if __name__ == "__main__":

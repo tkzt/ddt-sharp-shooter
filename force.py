@@ -5,7 +5,9 @@ from scipy.optimize import fsolve
 
 
 def calc_force(deg: float, wind: float, dx: float, dy: float):
-    r, w, g = [0.89927083, 5.8709153, -172.06527992]
+    if wind > 90:  # deg more than 90 means backward
+        wind = 180 - wind
+    r, w, g = [1.05235296, 5.50186622, -163.56591668]
     deg = deg * math.pi / 180
 
     def solve(f):
