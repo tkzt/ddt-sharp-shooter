@@ -267,13 +267,13 @@ def run():
 
     _tk = tkinter.Tk()
     _tk.title("DSS")
-    _tk.geometry("370x42")
+    _tk.geometry("370x84")
     _tk.wm_attributes("-topmost", 1, "-alpha", 0.618)
     _tk.bind("<Destroy>", on_destroy)
     _tk.configure(bg="#333333")
 
     text_widget = tkinter.Text(_tk, border=0, bg="#333333", fg="white")
-    text_widget.place(y=10, x=10, height=42)
+    text_widget.place(y=10, x=10, height=84)
     text_widget.config(state="disabled")
 
     setup_logger(text_widget)
