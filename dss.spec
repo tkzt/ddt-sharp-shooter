@@ -6,9 +6,9 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('C:\\Projects\\ddt-sharp-shooter\\.venv\\Lib\\site-packages\\onnxruntime\\capi\\onnxruntime_providers_shared.dll','onnxruntime\\capi'),
-        ('C:\\Projects\\ddt-sharp-shooter\\.venv\\Lib\\site-packages\\ddddocr\\common.onnx','ddddocr'),
-        ('C:\\Projects\\ddt-sharp-shooter\\.venv\\Lib\\site-packages\\ddddocr\\common_old.onnx','ddddocr'),
+        ('C:\\Projects\\boring-plans\\ddt-sharp-shooter\\.venv\\Lib\\site-packages\\onnxruntime\\capi\\onnxruntime_providers_shared.dll','onnxruntime\\capi'),
+        ('C:\\Projects\\boring-plans\\ddt-sharp-shooter\\.venv\\Lib\\site-packages\\ddddocr\\common.onnx','ddddocr'),
+        ('C:\\Projects\\boring-plans\\ddt-sharp-shooter\\.venv\\Lib\\site-packages\\ddddocr\\common_old.onnx','ddddocr'),
     ],
     hiddenimports=[],
     hookspath=[],
