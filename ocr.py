@@ -5,12 +5,18 @@ import numpy as np
 from logger import logger
 import pyautogui
 import ddddocr
+import dotenv
+import os
 from numpy import ndarray
-from skimage import color, measure, io, feature
+from skimage import color, measure, io
 from PIL import Image
 
+dotenv.load_dotenv()
+
+_DEV = os.environ.get("DEV", "0") == "1"
 _ocr = ddddocr.DdddOcr(show_ad=False)
 _ocr.set_ranges("0123456789")
+_throttle_key: int | None = None
 
 
 def _recognize_digit(image: ndarray) -> str:
@@ -25,7 +31,18 @@ def _recognize_digit(image: ndarray) -> str:
 
 
 def _capture_region(region: tuple[int, int, int, int], gray_scale=False) -> ndarray:
-    img = pyautogui.screenshot(region=region, imageFilename=f"{time.time()}.png")
+    global _throttle_key
+
+    img_save_path = None
+    if _DEV:
+        img_save_path = f"{int(time.time())}.png"
+        print(f"img_save_path: {img_save_path}")
+        if _throttle_key is not None and _throttle_key == img_save_path:
+            img_save_path = None
+        _throttle_key = img_save_path
+    # img_save_path = f"{time.time()}.png"
+
+    img = pyautogui.screenshot(region=region, imageFilename=img_save_path)
     img = img.convert("RGB")
     if gray_scale:
         img = img.convert("L")
@@ -33,18 +50,21 @@ def _capture_region(region: tuple[int, int, int, int], gray_scale=False) -> ndar
     return img
 
 
-def _left_side_more_dark(image: ndarray, debug=False) -> bool:
+def _left_side_more_dark(image: ndarray) -> bool:
     image_bin = _binarize_image_by_reference(image, (141, 141, 232), 50)
     shape = image_bin.shape
-    if debug:
+    if _DEV:
         io.imsave("tmp_left_side_dark.png", image_bin)
     return bool(
         np.mean(image_bin[:, : shape[1] // 2]) > np.mean(image_bin[:, shape[1] // 2 :])
     )
 
 
-def recognize(region: tuple[int, int, int, int]) -> str:
-    image = _capture_region(region)
+def recognize(region: tuple[int, int, int, int] | np.ndarray) -> str:
+    if isinstance(region, np.ndarray):
+        image = region
+    else:
+        image = _capture_region(region)
     result = _recognize_digit(image)
     return result
 
@@ -81,6 +101,18 @@ def recognize_wind(region: tuple[int, int, int, int] | ndarray) -> tuple[int, bo
         if w / image_bin.shape[1] < 0.37:
             result += 1
 
+    if result % 1 == 0:
+        image_gray = color.rgb2gray(image)
+        image_bin = image_gray > np.mean(image_gray) * 0.618
+        image_bin = image_bin[:, image_bin.shape[1] // 2 :]
+
+        contours = measure.find_contours(image_bin, 0.8)
+        largest_contour = max(contours, key=len)
+        min_x = int(np.min(largest_contour[:, 1]))
+        max_x = int(np.max(largest_contour[:, 1]))
+        w = max_x - min_x
+        if w / image_bin.shape[1] < 0.37:
+            result += 0.1
     return result, _left_side_more_dark(image)
 
 
@@ -141,9 +173,9 @@ def _binarize_image_by_reference(
     return image
 
 
-def _recognize_rect(image: ndarray, debug=False) -> tuple[int, int, int, int]:
+def _recognize_rect_width(image: ndarray) -> tuple[int, int, int, int]:
     """
-    Recognize the rectangle in the image.
+    Recognize width of the rectangle in the image.
 
     Args:
         image (ndarray): The input image (should be rgb image).
@@ -152,41 +184,48 @@ def _recognize_rect(image: ndarray, debug=False) -> tuple[int, int, int, int]:
         Tuple[int, int, int, int]: The coordinates of the rectangle (x, y, w, h).
     """
     target_color = np.array([160, 163, 169])
-    image = _binarize_image_by_reference(image, target_color, 61.8)
+    image = _binarize_image_by_reference(image, target_color, 40)
 
-    if debug:
+    if _DEV:
         io.imsave("tmp.png", image)
 
-    image = feature.canny(image, sigma=1)
-    contours = measure.find_contours(image, 0.8)
-    largest_contour = max(contours, key=len)
-    min_x = int(np.min(largest_contour[:, 1]))
-    max_x = int(np.max(largest_contour[:, 1]))
-    min_y = int(np.min(largest_contour[:, 0]))
-    max_y = int(np.max(largest_contour[:, 0]))
-    # calculate the width and height of the rectangle
-    w = max_x - min_x
-    h = max_y - min_y
+    # 分别找到左右第一个白色像素占比超过 1/3 的列
+    left_side = 0
+    right_side = 0
+    for i in range(image.shape[1]):
+        if np.sum(image[:, i]) > image.shape[0] / 4:
+            left_side = i
+            break
+    for i in range(image.shape[1] - 1, -1, -1):
+        if np.sum(image[:, i]) > image.shape[0] / 4:
+            right_side = i
+            break
+    w = right_side - left_side
 
-    if debug:
-        # draw the rectangle on the image with matplotlib
+    if _DEV:
+        # draw a rectangle on the image with matplotlib
         import matplotlib.pyplot as plt
         import matplotlib.patches as patches
+
+        print(f"left_side: {left_side}, right_side: {right_side}, w: {w}")
 
         fig, ax = plt.subplots()
         ax.imshow(image, cmap="gray")
         rect = patches.Rectangle(
-            (min_x, min_y), w, h, linewidth=1, edgecolor="r", facecolor="none"
+            (left_side, 0),
+            w,
+            image.shape[1] - 1,
+            linewidth=1,
+            edgecolor="r",
+            facecolor="none",
         )
         ax.add_patch(rect)
         plt.show()
 
-    return min_x, min_y, w, h
+    return w
 
 
-def recognize_ten_units(
-    region: tuple[int, int, int, int] | ndarray, debug=False
-) -> tuple[int, int]:
+def recognize_ten_units(region: tuple[int, int, int, int] | ndarray) -> tuple[int, int]:
     """
     Recognize the ten units in the image.
 
@@ -200,15 +239,52 @@ def recognize_ten_units(
         image = region
     else:
         image = _capture_region(region)
-    result = _recognize_rect(image, debug)
-    return result[2]
+    return _recognize_rect_width(image)
+
+
+def recognize_force(region: tuple[int, int, int, int] | ndarray) -> int:
+    """
+    Recognize the force in the image.
+
+    Args:
+        region (tuple[int, int, int, int] | ndarray): The region to capture (or directly the image) and recognize.
+
+    Returns:
+        int: The force.
+    """
+    if isinstance(region, np.ndarray):
+        image = region
+    else:
+        image = _capture_region(region)
+
+    image_bin = _binarize_image_by_reference(image, (232, 180, 70), 61.8)
+
+    if _DEV:
+        io.imsave("tmp_force.png", image_bin)
+
+    right_side = 0
+    for i in range(image_bin.shape[1] - 1, -1, -1):
+        if np.sum(image_bin[:, i]) > image_bin.shape[0] / 3:
+            right_side = i
+            break
+
+    return right_side / image_bin.shape[1] * 100
 
 
 if __name__ == "__main__":
-    image = io.imread("wind_11.png")
-    res = recognize_wind(image)
-    print(res)
-
-    # image = io.imread("minimap_7.png")
-    # res = recognize_ten_units(image, True)
+    # image = io.imread("wind.png")
+    # res = recognize_wind(image)
     # print(res)
+
+    # image = io.imread("minimap.png")
+    # res = recognize_ten_units(image)
+    # print(res)
+
+    # image = io.imread("deg.png")
+    # res = recognize(image)
+    # print(res)
+
+    # image = io.imread("force_1.png")
+    # res = recognize_force(image)
+    # print(res)
+    pass

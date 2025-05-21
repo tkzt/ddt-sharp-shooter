@@ -1,5 +1,4 @@
 import queue
-import time
 import pyautogui
 from pynput import keyboard
 
@@ -21,11 +20,11 @@ def on_press(event):
             _queue.put("delete")
 
 
-def space_press_and_release(duration):
-    """Press the key 'space' down for a while,
-    and then release"""
+def space_press():
     pyautogui.keyDown("space")
-    time.sleep(duration)
+
+
+def space_release():
     pyautogui.keyUp("space")
 
 

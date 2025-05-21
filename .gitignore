@@ -6,3 +6,4 @@ venv
 .DS_Store
 *.list
 game_config.json
+.env

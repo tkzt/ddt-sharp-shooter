@@ -11,18 +11,21 @@ from logger import logger, setup_logger
 from force import calc_force
 from km import (
     get_curr_mouse_pos,
-    space_press_and_release,
+    space_press,
+    space_release,
     setup as setup_km,
     stop_listen as km_stop_listen,
 )
-from ocr import recognize, recognize_ten_units, recognize_wind
+from ocr import recognize, recognize_force, recognize_ten_units, recognize_wind
+
 
 _GAME_CONFIG_PATH = "game_config.json"
-_PRESS_DURATION_PER_FORCE = 4.2 / 100
+_PRESS_DURATION_PER_FORCE = 4 / 100
 _REF_GAME_REGION_WIDTH = 1500
 _WIND_REGION = (709, 22, 84, 54)  # (x, y, w, h)
 _DEG_REGION = (43, 835, 64, 36)  # (x, y, w, h)
-_MINIMAP_REGION = (1240, 45, 245, 140)  # (x, y, w, h)
+_MINIMAP_REGION = (1230, 45, 255, 140)  # (x, y, w, h)
+_FORCE_REGION = (225, 860, 745, 28)  # (x, y, w, h)
 _cmd_flag = 0
 _cmd_typing = ""
 _km_queue = Queue()
@@ -125,7 +128,7 @@ def reset_inputs(new_game=False):
     _enemy_pos = None
     _cmd_typing = ""
     _tmp_pos = None
-    logger.info("指令输入关闭.")
+    logger.info("指令输入关闭." if not new_game else "就绪.")
 
 
 def handle_inputs(inputs: str):
@@ -197,7 +200,7 @@ def handle_inputs(inputs: str):
                 return
             logger.info("标记十屏距离.")
             _tmp_pos = get_curr_mouse_pos()
-        elif inputs == "w":
+        elif inputs == "y":
             if _tmp_pos:
                 pos = get_curr_mouse_pos()
                 _enemy_pos = (
@@ -224,6 +227,18 @@ def calc_duration(force):
     return _PRESS_DURATION_PER_FORCE * force
 
 
+def _get_curr_force():
+    pos_adjust_ratio = _game_config["region"][2] / _REF_GAME_REGION_WIDTH
+    return recognize_force(
+        (
+            int((_game_config["region"][0] + _FORCE_REGION[0]) * pos_adjust_ratio),
+            int((_game_config["region"][1] + _FORCE_REGION[1]) * pos_adjust_ratio),
+            int(_FORCE_REGION[2] * pos_adjust_ratio),
+            int(_FORCE_REGION[3] * pos_adjust_ratio),
+        )
+    )
+
+
 def fire(force: int):
     """Steps to fire:
     - Calculate force
@@ -233,7 +248,10 @@ def fire(force: int):
     time.sleep(1.5)
     logger.info(f"发射力度: {force}")
     logger.info("发射!")
-    space_press_and_release(calc_duration(force))
+    space_press()
+
+    time.sleep(_PRESS_DURATION_PER_FORCE * force)
+    space_release()
 
 
 def on_destroy(_):

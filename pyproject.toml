@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "ddddocr>=1.5.6",
+    "dotenv>=0.9.9",
     "matplotlib>=3.10.3",
     "pillow>=11.2.1",
     "pyautogui>=0.9.54",
