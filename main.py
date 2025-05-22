@@ -117,7 +117,6 @@ def recognize_and_fire():
     )
     force = calc_force(int(deg), wind, dx, dy)
     fire(force)
-    reset_inputs()
 
 
 def reset_inputs(new_game=False):
@@ -128,7 +127,7 @@ def reset_inputs(new_game=False):
     _enemy_pos = None
     _cmd_typing = ""
     _tmp_pos = None
-    logger.info("指令输入关闭." if not new_game else "就绪.")
+    logger.info("指令输入关闭." if new_game else "就绪.")
 
 
 def handle_inputs(inputs: str):
@@ -249,7 +248,6 @@ def fire(force: int):
     logger.info(f"发射力度: {force}")
     logger.info("发射!")
     space_press()
-
     time.sleep(_PRESS_DURATION_PER_FORCE * force)
     space_release()
 
